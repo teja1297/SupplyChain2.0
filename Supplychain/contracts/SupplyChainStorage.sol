@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.2;
 
-contract SupplyChainPharma{
+contract SupplyChainStorage{
 
 address public owner;
     constructor() public{
@@ -46,7 +46,7 @@ address public owner;
     struct Manufacturer{
         string name;
         string ManufacturerAddress;
-        string ExporterName;
+        address ExporterAddress;
         uint32 ExportingTemparature;
         uint32 ExportingDateTime;
         string DrugStatus;
@@ -59,7 +59,7 @@ address public owner;
         uint32 ExportingTemparature;
         uint32 ImportingDateTime;
         uint32 ExportingDateTime;
-        string ExporterName;
+        address ExporterAddress;
         string DrugStatus;
     }
 
@@ -70,7 +70,7 @@ address public owner;
         uint32 ExportingTemparature;
         uint32 ImportingDateTime;
         uint32 ExportingDateTime;
-        string ExporterName;
+       address ExporterAddress;
         string DrugStatus;
     }
 
@@ -115,7 +115,7 @@ address public owner;
         UserDetail.name = _name;
         UserDetail.contactNo = _contactNo;
         UserDetail.isActive = _isActive;
-        
+        authorizedCaller[_userAddress] = 1;
         /*store data into mapping*/
         BatchUserDetails[_userAddress] = UserDetail;
         userRole[_userAddress] = _role;
@@ -168,15 +168,15 @@ address public owner;
     function MoveFromManufacturer(address _SerialNumber,
                              string memory _name,
                              string memory _ManufacturerAddress,
-                             string memory _ExporterName,
+                             address  _ExporterAddress,
                              uint32  _ExportingTemparature,
                              uint32 _ExportingDateTime
                              )public onlyAuthCaller  returns(bool){      
-                bool good =  isBad(_SerialNumber,_ExportingTemparature);
+                bool good =  isBad(_SerialNumber,_ExportingTemparature,_ExporterAddress);
            if(good){                     
          ManufacturerDetails.name = _name;
          ManufacturerDetails.ManufacturerAddress = _ManufacturerAddress;
-         ManufacturerDetails.ExporterName = _ExporterName;
+         ManufacturerDetails.ExporterAddress = _ExporterAddress;
          ManufacturerDetails.ExportingTemparature = _ExportingTemparature;
          ManufacturerDetails.ExportingDateTime = _ExportingDateTime;
          BatchManufactureringDetails[_SerialNumber] = ManufacturerDetails;
@@ -195,9 +195,9 @@ address public owner;
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
         uint32 _ExportingDateTime,
-        string memory _ExporterName,
+        address _ExporterAddress
         ) public onlyAuthCaller returns(bool){
-           bool good =  isBad(_SerialNumber,_ExportingTemparature);
+           bool good =  isBad(_SerialNumber,_ExportingTemparature,_ExporterAddress);
            if(good){
             DistributerDetails.name = _name;
             DistributerDetails.DistributorAddress =  _DistributorAddress;
@@ -205,7 +205,7 @@ address public owner;
             DistributerDetails.ExportingTemparature = _ExportingTemparature;
             DistributerDetails.ImportingDateTime = _ImportingDateTime;
             DistributerDetails.ExportingDateTime = _ExportingDateTime;
-            DistributerDetails.ExporterName = _ExporterName;
+            DistributerDetails.ExporterAddress = _ExporterAddress;
             DistributerDetails.DrugStatus = "Good";
             BatchDistributerDetails[_SerialNumber] = DistributerDetails;
              nextOwner[_SerialNumber] = 'WhareHouse'; 
@@ -225,9 +225,9 @@ address public owner;
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
         uint32 _ExportingDateTime,
-        string memory _ExporterName,
-        string memory _DrugStatus) public onlyAuthCaller returns(bool){
-               bool good =  isBad(_SerialNumber,_ExportingTemparature);
+        address _ExporterAddress
+        ) public onlyAuthCaller returns(bool){
+               bool good =  isBad(_SerialNumber,_ExportingTemparature,_ExporterAddress);
            if(good){
             WhareHouseDetails.name = _name;
             WhareHouseDetails.WhareHouseAddress =  _WhareHouseAddress;
@@ -235,8 +235,8 @@ address public owner;
             WhareHouseDetails.ExportingTemparature = _ExportingTemparature;
             WhareHouseDetails.ImportingDateTime = _ImportingDateTime;
             WhareHouseDetails.ExportingDateTime = _ExportingDateTime;
-            WhareHouseDetails.ExporterName = _ExporterName;
-            WhareHouseDetails.DrugStatus = _DrugStatus;
+            WhareHouseDetails.ExporterAddress = _ExporterAddress;
+            WhareHouseDetails.DrugStatus = "Good";
             BatchWhareHouseDetails[_SerialNumber] = WhareHouseDetails;
              nextOwner[_SerialNumber] = 'Pharmacy';
             return true; 
@@ -253,13 +253,13 @@ function importToPharmacy(address _SerialNumber,
         string memory _PharmacyAddress,
         uint32 _ImportingTemparature,
         uint32 _ImportingDateTime) public onlyAuthCaller  returns(bool){
-               bool good =  isBad(_SerialNumber,_ImportingTemparature);
+               bool good =  isBad(_SerialNumber,_ImportingTemparature,address(0));
            if(good){
 
             PharmacyDetails.PharmacyName = _PharmacyName;
             PharmacyDetails.PharmacyAddress = _PharmacyAddress;
             PharmacyDetails.ImportingTemparature = _ImportingTemparature;
-            PharmacyDetails.DrugStatus = _DrugStatus;
+            PharmacyDetails.DrugStatus = "Good";
             PharmacyDetails.ImportingDateTime = _ImportingDateTime;
             BatchPharmacyDetails[_SerialNumber] = PharmacyDetails;
              nextOwner[_SerialNumber] = 'DONE';
@@ -293,8 +293,8 @@ function importToPharmacy(address _SerialNumber,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature,
-        string memory _status,
-        bool _isBad){
+        string memory _status
+        ){
 
         Drug memory tmpData = BatchDrugDetails[_SerialNumber];
 
@@ -308,8 +308,7 @@ function importToPharmacy(address _SerialNumber,
         tmpData.expTimeStamp,
         tmpData.CurrentTemperature,
         tmpData.IdealTemperature,
-        tmpData.status,
-        tmpData.isBad);
+        tmpData.status);
         }
 
 
@@ -320,14 +319,14 @@ function importToPharmacy(address _SerialNumber,
       /*get ManufacturerDetails*/
     function getManufacturerDetails(address _SerialNumber) public onlyAuthCaller view returns(string memory _name,
                              string memory _ManufacturerAddress,
-                             string memory _ExporterName,
+                             address _ExporterAddress,
                              uint32 _ExportingTemparature,
                              uint32 _ExportingDateTime, 
                              string memory _DrugStatus) {
         
         Manufacturer memory tmpData = BatchManufactureringDetails[_SerialNumber];
 
-        return (tmpData.name,tmpData.ManufacturerAddress,tmpData.ExporterName,tmpData.ExportingTemparature,tmpData.ExportingDateTime,tmpData.DrugStatus);
+        return (tmpData.name,tmpData.ManufacturerAddress,tmpData.ExporterAddress,tmpData.ExportingTemparature,tmpData.ExportingDateTime,tmpData.DrugStatus);
     }
 
 
@@ -342,13 +341,13 @@ function importToPharmacy(address _SerialNumber,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
         uint32 _ExportingDateTime,
-        string memory _ExporterName,
+        address _ExporterAddress,
         string memory _DrugStatus
     )
     { 
         Distributer memory tmpData = BatchDistributerDetails[_SerialNumber];
 
-        return (tmpData.name,tmpData.DistributorAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterName,tmpData.DrugStatus);
+        return (tmpData.name,tmpData.DistributorAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
     }
 
 
@@ -359,10 +358,10 @@ function importToPharmacy(address _SerialNumber,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
         uint32 _ExportingDateTime,
-        string memory _ExporterName,
+      address _ExporterAddress,
         string memory _DrugStatus) {
             WhareHouse memory tmpData = BatchWhareHouseDetails[_SerialNumber];
-                    return (tmpData.name,tmpData.WhareHouseAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterName,tmpData.DrugStatus);
+                    return (tmpData.name,tmpData.WhareHouseAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
 
         }
 
@@ -417,7 +416,7 @@ function importToPharmacy(address _SerialNumber,
         return nextOwner[_SerialNumber];
     }
 
-function isBad(address _SerialNumber,uint32 _ExportingTemparature) internal returns(bool){
+function isBad(address _SerialNumber,uint32 _ExportingTemparature,address currentowner) internal returns(bool){
     require(!BatchDrugDetails[_SerialNumber].isBad);
   DrugDetails = BatchDrugDetails[_SerialNumber];
   DrugDetails.CurrentTemperature = _ExportingTemparature;
@@ -435,7 +434,7 @@ function isBad(address _SerialNumber,uint32 _ExportingTemparature) internal retu
            BatchDrugDetails[_SerialNumber]=DrugDetails;
         return false;
     }
-    DrugDetails.CurrentproductOwner = tx.origin;
+    DrugDetails.CurrentproductOwner = currentowner;
     BatchDrugDetails[_SerialNumber]=DrugDetails;
 
         return true;
@@ -445,7 +444,7 @@ function isBad(address _SerialNumber,uint32 _ExportingTemparature) internal retu
 }
 
 
-//currentproductowner
+
 
 
 
