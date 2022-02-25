@@ -133,13 +133,12 @@ address public owner;
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
-        address _CurrentproductOwner,
         uint32 _cost,
         uint _mfgTimeStamp,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature
-     ) public  returns(address){
+     ) public onlyOwner  returns(address){
 
          uint tmpData = uint(keccak256(abi.encodePacked(msg.sender, block.timestamp )));
         address SerialNumber = address(tmpData);
@@ -148,7 +147,7 @@ address public owner;
         DrugDetails.batchID = _batchID;
         DrugDetails.drugName = _drugName;
         DrugDetails.Currentlocation = _Currentlocation;
-        DrugDetails.CurrentproductOwner = _CurrentproductOwner;
+        DrugDetails.CurrentproductOwner = tx.origin;
         DrugDetails.cost = _cost;
         DrugDetails.mfgTimeStamp = _mfgTimeStamp;
         DrugDetails.expTimeStamp = _expTimeStamp;
@@ -426,6 +425,7 @@ function isBad(address _SerialNumber,uint32 _ExportingTemparature,address curren
         DrugDetails.isBad = true;
         DrugDetails.status = "Exceeded ideal temperature";
            BatchDrugDetails[_SerialNumber]=DrugDetails;
+
         return false;
     }
     else if(DrugDetails.expTimeStamp <=block.timestamp){
