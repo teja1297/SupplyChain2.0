@@ -46,14 +46,13 @@ event MovedToPharmacy(address indexed user, address indexed SerialNumber);
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
-        address _CurrentproductOwner,
         uint32 _cost,
         uint _mfgTimeStamp,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature
      ) public  returns(address){
-         address SerialNumber = supplyChainStorage.setDrugDetails(_drugID,_batchID,_drugName,_Currentlocation,_CurrentproductOwner,_cost,_mfgTimeStamp,_expTimeStamp,_CurrentTemperature,_IdealTemperature);
+         address SerialNumber = supplyChainStorage.setDrugDetails(_drugID,_batchID,_drugName,_Currentlocation,_cost,_mfgTimeStamp,_expTimeStamp,_CurrentTemperature,_IdealTemperature);
           emit addDrug(msg.sender, SerialNumber); 
           return SerialNumber;
      }
@@ -62,11 +61,11 @@ event MovedToPharmacy(address indexed user, address indexed SerialNumber);
                              string memory _name,
                              string memory _ManufacturerAddress,
                              address _ExporterAddress,
-                             uint32  _ExportingTemparature,
-                             uint32 _ExportingDateTime
+                             uint32  _ExportingTemparature
+                            
                              )public isValidPerformer(_SerialNumber,'Manufacturer')  returns(bool){
 
-                                bool result =  supplyChainStorage.MoveFromManufacturer(_SerialNumber,_name,_ManufacturerAddress, _ExporterAddress,_ExportingTemparature,_ExportingDateTime);
+                                bool result =  supplyChainStorage.MoveFromManufacturer(_SerialNumber,_name,_ManufacturerAddress, _ExporterAddress,_ExportingTemparature);
                                 emit MovedFromManufacturer(msg.sender,_SerialNumber);
                                 return result;
                              }
@@ -78,11 +77,10 @@ function MoveFromDistributor(address _SerialNumber,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
-        uint32 _ExportingDateTime,
        address _ExporterAddress
         ) public isValidPerformer(_SerialNumber,'Distributor') returns(bool){
 
-             bool result =  supplyChainStorage.MoveFromDistributor(_SerialNumber,_name,_DistributorAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress);
+             bool result =  supplyChainStorage.MoveFromDistributor(_SerialNumber,_name,_DistributorAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExporterAddress);
                                 emit MovedFromDistributor(msg.sender,_SerialNumber);
                                 return result;   
             }
@@ -95,16 +93,13 @@ function MoveFromWhareHouse(address _SerialNumber,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
-        uint32 _ExportingDateTime,
         address _ExporterAddress
         ) public isValidPerformer(_SerialNumber,'WhareHouse') returns(bool){
 
-             bool result =  supplyChainStorage.moveFromWhareHouse(_SerialNumber,_name,_WhareHouseAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress);
+             bool result =  supplyChainStorage.moveFromWhareHouse(_SerialNumber,_name,_WhareHouseAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExporterAddress);
                                 emit MovedFromWhareHouse(msg.sender,_SerialNumber);
                                 return result;   
             }
-
-
 
 
 
@@ -151,7 +146,7 @@ function importToPharmacy(address _SerialNumber,
                              string memory _ManufacturerAddress,
                             address _ExporterAddress,
                              uint32 _ExportingTemparature,
-                             uint32 _ExportingDateTime, 
+                             uint256 _ExportingDateTime, 
                              string memory _DrugStatus) {
      (_name,_ManufacturerAddress,_ExporterAddress,_ExportingTemparature,_ExportingDateTime,_DrugStatus)=supplyChainStorage.getManufacturerDetails(_SerialNumber);
 
@@ -164,7 +159,7 @@ function importToPharmacy(address _SerialNumber,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
-        uint32 _ExportingDateTime,
+        uint256 _ExportingDateTime,
         address _ExporterAddress,
         string memory _DrugStatus
     )
@@ -181,7 +176,7 @@ function importToPharmacy(address _SerialNumber,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
-        uint32 _ExportingDateTime,
+        uint256 _ExportingDateTime,
        address _ExporterAddress,
         string memory _DrugStatus) {
            (name,_whareHouseAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus)=supplyChainStorage.getWhareHouseDetails(_SerialNumber);
@@ -201,6 +196,27 @@ return(name,_whareHouseAddress,_ImportingTemparature,_ExportingTemparature,_Impo
 return(_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime);
 
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+  
+   
+
+
+
+
 
 
 
