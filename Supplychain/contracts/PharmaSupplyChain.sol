@@ -114,14 +114,6 @@ function importToPharmacy(address _SerialNumber,
         }
 
 
-                
-
-
-
-
-
-
-
 
 
  function getDrugDetails(address _SerialNumber) public  view returns(uint32 _drugID,
@@ -196,27 +188,6 @@ return(name,_whareHouseAddress,_ImportingTemparature,_ExportingTemparature,_Impo
 return(_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime);
 
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-  
-   
-
-
-
-
 
 
 
