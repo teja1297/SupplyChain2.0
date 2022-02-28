@@ -2,141 +2,50 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-contract SupplyChainStorage{
+import "./SupplyChainStorage.sol";
 
-address public owner;
-    constructor() public{
-        owner = msg.sender;
-         authorizedCaller[msg.sender] = 1;
+contract PharmaSupplyChain {
+event addDrug(address indexed user, address indexed SerialNumber);
+event MovedFromManufacturer(address indexed user, address indexed SerialNumber);
+event MovedFromDistributor(address indexed user, address indexed SerialNumber);
+event MovedFromWholesaler(address indexed user, address indexed SerialNumber);
+event MovedToPharmacy(address indexed user, address indexed SerialNumber);
+
+
+  modifier isValidPerformer(address _SerialNumber, string memory role) {
+        require(keccak256(abi.encodePacked(supplyChainStorage.getUserRole(msg.sender))) == keccak256(abi.encodePacked(role)));
+        require(keccak256(abi.encodePacked(supplyChainStorage.getnextOwner(_SerialNumber))) == keccak256(abi.encodePacked(role)));
+        _;
     }
 
-
-    address[] public DrugList ;//newly added
-    /* Events */
-    event AuthorizedCaller(address caller);
-    event DeAuthorizedCaller(address caller);
-
-
-    mapping(address => string) userRole;
-
-    mapping(address => uint8) authorizedCaller;
-      mapping (address => string) nextOwner;
-
-    
-    struct User{
-        string name;
-        string contactNo;
-        bool isActive;
-     }
-
-
-    struct  Drug {
-        uint32 drugID;
-        uint32 batchID;
-        string drugName;
-        string Currentlocation;
-        address CurrentproductOwner;
-        uint32 cost;
-        uint mfgTimeStamp;
-        uint expTimeStamp;
-        uint32  CurrentTemperature;
-        uint32 IdealTemperature;
-        string status;
-        bool isBad;
+     /* Storage Variables */    
+     SupplyChainStorage supplyChainStorage;
+address[] DrugList;
+ constructor(address _supplyChainAddress) public {
+        supplyChainStorage = SupplyChainStorage(_supplyChainAddress);
+      DrugList = supplyChainStorage.getDrugKeyList();
     }
 
-    struct Manufacturer{
-        string name;
-        string ManufacturerAddress;
-        address ExporterAddress;
-        uint32 ExportingTemparature;
-        uint256 ExportingDateTime;
-        string DrugStatus;
-    }
-
-    struct Distributer{
-        string name;
-        string DistributorAddress;
-        uint32 ImportingTemparature;
-        uint32 ExportingTemparature;
-        uint32 ImportingDateTime;
-        uint256 ExportingDateTime;
-        address ExporterAddress;
-        string DrugStatus;
-    }
-
-    struct Wholesaler{
-        string name;
-        string WholesalerAddress;
-        uint32 ImportingTemparature;
-        uint32 ExportingTemparature;
-        uint32 ImportingDateTime;
-        uint256 ExportingDateTime;
-       address ExporterAddress;
-        string DrugStatus;
-    }
-
-    struct Pharmacy{
-
-        string PharmacyName;
-        string PharmacyAddress;
-        uint32 ImportingTemparature;
-        string DrugStatus;
-        uint32 ImportingDateTime;
-    }
-    mapping(address => Drug) BatchDrugDetails;
-    mapping(address =>User) BatchUserDetails;
-    mapping(address => Manufacturer)BatchManufactureringDetails;
-    mapping(address =>Distributer)BatchDistributerDetails;
-    mapping(address =>Wholesaler)BatchWholesalerDetails;
-    mapping(address =>Pharmacy)BatchPharmacyDetails;
-
-
-        Drug DrugDetails;
-        User UserDetail;
-        Manufacturer ManufacturerDetails;
-        Distributer DistributerDetails;
-        Wholesaler WholesalerDetails;
-        Pharmacy PharmacyDetails;
-
-
-
-    // function getAllDrugDetails() public view returns(Drug[] memory){
-    //    Drug[] memory drugs;
-    //     for(uint i=0;i<DrugList.length;i++){
-    //     drugs[i] = BatchDrugDetails[DrugList[i]];
-    //     }
-    //     return drugs;
-    // }
-
-    function getUserRole(address _userAddress) public onlyAuthCaller view returns( string memory)
+    function getnextOwner(address _SerialNumber) public view returns(string memory Owner)
     {
-        return userRole[_userAddress];
-    }
-
-    function getDrugKeyList() public view returns(address[] memory){
-        return DrugList;
+       (Owner) = supplyChainStorage.getnextOwner(_SerialNumber);
+       return (Owner);
     }
 
 
-     function setUser(address  _userAddress,
+    function addUser(address  _userAddress,
                      string memory _name, 
                      string  memory _contactNo, 
                      string memory _role, 
-                     bool _isActive) public onlyOwner returns(bool){
-        
-        /*store data into struct*/
-        UserDetail.name = _name;
-        UserDetail.contactNo = _contactNo;
-        UserDetail.isActive = _isActive;
-        authorizedCaller[_userAddress] = 1;
-        /*store data into mapping*/
-        BatchUserDetails[_userAddress] = UserDetail;
-        userRole[_userAddress] = _role;
-        return true;
-    }  
+                     bool _isActive) public returns(bool){
 
-    function setDrugDetails(uint32 _drugID,
+                       bool result = supplyChainStorage.setUser(_userAddress,_name,_contactNo,_role,_isActive);
+                       
+                        return result;
+    }
+
+
+   function addDrugDetails(uint32 _drugID,
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
@@ -145,146 +54,72 @@ address public owner;
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature
-     ) public onlyOwner  returns(address){
-
-         uint tmpData = uint(keccak256(abi.encodePacked(msg.sender, block.timestamp )));
-        address SerialNumber = address(tmpData);
-         DrugList.push(SerialNumber);//newly added
-        DrugDetails.drugID = _drugID;
-        DrugDetails.batchID = _batchID;
-        DrugDetails.drugName = _drugName;
-        DrugDetails.Currentlocation = _Currentlocation;
-        DrugDetails.CurrentproductOwner = tx.origin;
-        DrugDetails.cost = _cost;
-        DrugDetails.mfgTimeStamp = _mfgTimeStamp;
-        DrugDetails.expTimeStamp = _expTimeStamp;
-        DrugDetails.CurrentTemperature = _CurrentTemperature;
-        DrugDetails.IdealTemperature = _IdealTemperature;
-        DrugDetails.status = "Good";
-        nextOwner[SerialNumber] = "Manufacturer";
-        BatchDrugDetails[SerialNumber] = DrugDetails;
-        return SerialNumber;
-
-    }
-
- 
+     ) public  returns(address){
+         address SerialNumber = supplyChainStorage.setDrugDetails(_drugID,_batchID,_drugName,_Currentlocation,_cost,_mfgTimeStamp,_expTimeStamp,_CurrentTemperature,_IdealTemperature);
+          emit addDrug(msg.sender, SerialNumber); 
+          return SerialNumber;
+     }
 
 
- /*Set ManufacturerDetails*/
-    function MoveFromManufacturer(address _SerialNumber,
+      function MoveFromManufacturer(address _SerialNumber,
                              string memory _name,
                              string memory _ManufacturerAddress,
-                             address  _ExporterAddress,
+                             address _ExporterAddress,
                              uint32  _ExportingTemparature
-                             )public onlyAuthCaller  returns(bool){      
-                bool good =  isBad(_SerialNumber,_ExportingTemparature,_ExporterAddress);
-           if(good){                     
-         ManufacturerDetails.name = _name;
-         ManufacturerDetails.ManufacturerAddress = _ManufacturerAddress;
-         ManufacturerDetails.ExporterAddress = _ExporterAddress;
-         ManufacturerDetails.ExportingTemparature = _ExportingTemparature;
-         ManufacturerDetails.ExportingDateTime = block.timestamp;
-         BatchManufactureringDetails[_SerialNumber] = ManufacturerDetails;
-          nextOwner[_SerialNumber] = 'Distributor'; 
-        
-         return true;}
-         else{
-             return false;
-         }
-        }
+                            
+                             )public isValidPerformer(_SerialNumber,'Manufacturer')  returns(bool){
 
-    function MoveFromDistributor(address _SerialNumber,
+                                bool result =  supplyChainStorage.MoveFromManufacturer(_SerialNumber,_name,_ManufacturerAddress, _ExporterAddress,_ExportingTemparature);
+                                emit MovedFromManufacturer(msg.sender,_SerialNumber);
+                                return result;
+                             }
+
+
+function MoveFromDistributor(address _SerialNumber,
         string memory _name,   
         string memory _DistributorAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
-        address _ExporterAddress
-        ) public onlyAuthCaller returns(bool){
-           bool good =  isBad(_SerialNumber,_ExportingTemparature,_ExporterAddress);
-           if(good){
-            DistributerDetails.name = _name;
-            DistributerDetails.DistributorAddress =  _DistributorAddress;
-            DistributerDetails.ImportingTemparature = _ImportingTemparature;
-            DistributerDetails.ExportingTemparature = _ExportingTemparature;
-            DistributerDetails.ImportingDateTime = _ImportingDateTime;
-            DistributerDetails.ExportingDateTime = block.timestamp;
-            DistributerDetails.ExporterAddress = _ExporterAddress;
-            DistributerDetails.DrugStatus = "Good";
-            BatchDistributerDetails[_SerialNumber] = DistributerDetails;
-             nextOwner[_SerialNumber] = 'Wholesaler'; 
-            return true; 
-           }
-           else{
-               return false;
-           }
-        }
+       address _ExporterAddress
+        ) public isValidPerformer(_SerialNumber,'Distributor') returns(bool){
+
+             bool result =  supplyChainStorage.MoveFromDistributor(_SerialNumber,_name,_DistributorAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExporterAddress);
+                                emit MovedFromDistributor(msg.sender,_SerialNumber);
+                                return result;   
+            }
 
 
-
- function moveFromWholesaler(address _SerialNumber,
+function MoveFromWholesaler(address _SerialNumber,
         string memory _name,   
         string memory _WholesalerAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
         address _ExporterAddress
-        ) public onlyAuthCaller returns(bool){
-               bool good =  isBad(_SerialNumber,_ExportingTemparature,_ExporterAddress);
-           if(good){
-            WholesalerDetails.name = _name;
-            WholesalerDetails.WholesalerAddress =  _WholesalerAddress;
-            WholesalerDetails.ImportingTemparature = _ImportingTemparature;
-            WholesalerDetails.ExportingTemparature = _ExportingTemparature;
-            WholesalerDetails.ImportingDateTime = _ImportingDateTime;
-            WholesalerDetails.ExportingDateTime = block.timestamp;
-            WholesalerDetails.ExporterAddress = _ExporterAddress;
-            WholesalerDetails.DrugStatus = "Good";
-            BatchWholesalerDetails[_SerialNumber] = WholesalerDetails;
-             nextOwner[_SerialNumber] = 'Pharmacy';
-            return true; 
-           }
-           else{
-               return false;
-           }
-        }
+        ) public isValidPerformer(_SerialNumber,'Wholesaler') returns(bool){
+
+             bool result =  supplyChainStorage.moveFromWholesaler(_SerialNumber,_name,_WholesalerAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExporterAddress);
+                                emit MovedFromWholesaler(msg.sender,_SerialNumber);
+                                return result;   
+            }
+
+
 
 function importToPharmacy(address _SerialNumber,
         string memory _PharmacyName,
         string memory _PharmacyAddress,
         uint32 _ImportingTemparature,
-        uint32 _ImportingDateTime) public onlyAuthCaller  returns(bool){
-               bool good =  isBad(_SerialNumber,_ImportingTemparature,address(0));
-           if(good){
-
-            PharmacyDetails.PharmacyName = _PharmacyName;
-            PharmacyDetails.PharmacyAddress = _PharmacyAddress;
-            PharmacyDetails.ImportingTemparature = _ImportingTemparature;
-            PharmacyDetails.DrugStatus = "Good";
-            PharmacyDetails.ImportingDateTime = _ImportingDateTime;
-            BatchPharmacyDetails[_SerialNumber] = PharmacyDetails;
-             nextOwner[_SerialNumber] = 'DONE';
-            return true;}
-            else{
-                return false;
-            }
-    
-}
-    /*get user details*/
-    function getUser(address _userAddress) public onlyAuthCaller view returns(string memory name, 
-                                                                    string memory contactNo, 
-                                                                    string memory role,
-                                                                    bool isActive
-                                                                ){
-
-        /*Getting value from struct*/
-        User memory tmpData = BatchUserDetails[_userAddress];
-        
-        return (tmpData.name, tmpData.contactNo, userRole[_userAddress], tmpData.isActive);
-    }
+        uint32 _ImportingDateTime) public isValidPerformer(_SerialNumber,'Pharmacy') returns(bool){
+            bool result = supplyChainStorage.importToPharmacy(_SerialNumber,_PharmacyName,_PharmacyAddress,_ImportingTemparature,_ImportingDateTime);
+            emit MovedToPharmacy(msg.sender,_SerialNumber);
+            return result;
+        }
 
 
-    function getDrugDetails(address _SerialNumber) public onlyAuthCaller view returns(uint32 _drugID,
+
+
+ function getDrugDetails(address _SerialNumber) public  view returns(uint32 _drugID,
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
@@ -294,152 +129,67 @@ function importToPharmacy(address _SerialNumber,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature,
-        string memory _status
-        ){
-
-        Drug memory tmpData = BatchDrugDetails[_SerialNumber];
-
-        return(tmpData.drugID,
-        tmpData.batchID,
-        tmpData.drugName,
-        tmpData.Currentlocation,
-        tmpData.CurrentproductOwner,
-        tmpData.cost,
-        tmpData.mfgTimeStamp,
-        tmpData.expTimeStamp,
-        tmpData.CurrentTemperature,
-        tmpData.IdealTemperature,
-        tmpData.status);
+        string memory _status){
+      
+      return supplyChainStorage.getDrugDetails(_SerialNumber);
+      
         }
 
 
 
-
-  
-
-      /*get ManufacturerDetails*/
-    function getManufacturerDetails(address _SerialNumber) public onlyAuthCaller view returns(string memory _name,
+         function getManufacturerDetails(address _SerialNumber) public  view returns(string memory _name,
                              string memory _ManufacturerAddress,
-                             address _ExporterAddress,
+                            address _ExporterAddress,
                              uint32 _ExportingTemparature,
-                             uint _ExportingDateTime, 
+                             uint256 _ExportingDateTime, 
                              string memory _DrugStatus) {
+     (_name,_ManufacturerAddress,_ExporterAddress,_ExportingTemparature,_ExportingDateTime,_DrugStatus)=supplyChainStorage.getManufacturerDetails(_SerialNumber);
+
+        return (_name,_ManufacturerAddress,_ExporterAddress,_ExportingTemparature,_ExportingDateTime,_DrugStatus);
+ 
         
-        Manufacturer memory tmpData = BatchManufactureringDetails[_SerialNumber];
-
-        return (tmpData.name,tmpData.ManufacturerAddress,tmpData.ExporterAddress,tmpData.ExportingTemparature,tmpData.ExportingDateTime,tmpData.DrugStatus);
-    }
-
-
-
-
-
- /*get DistributorDetails*/
-
-  function getDistributorDetails(address _SerialNumber) public onlyAuthCaller view returns(string memory name,   
+         }
+ function getDistributorDetails(address _SerialNumber) public  view returns(string memory name,   
         string memory _DistributorAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
-        uint _ExportingDateTime,
+        uint256 _ExportingDateTime,
         address _ExporterAddress,
         string memory _DrugStatus
     )
     { 
-        Distributer memory tmpData = BatchDistributerDetails[_SerialNumber];
+                    (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus) = supplyChainStorage.getWholesalerDetails(_SerialNumber);
 
-        return (tmpData.name,tmpData.DistributorAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
+
+          return (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
+
     }
-
-
-    function getWholesalerDetails(address _SerialNumber
+ function getWholesalerDetails(address _SerialNumber
         )public view returns(string memory name,   
         string memory _WholesalerAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
-        uint _ExportingDateTime,
-      address _ExporterAddress,
+        uint256 _ExportingDateTime,
+       address _ExporterAddress,
         string memory _DrugStatus) {
-            Wholesaler memory tmpData = BatchWholesalerDetails[_SerialNumber];
-                    return (tmpData.name,tmpData.WholesalerAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
+           (name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus)=supplyChainStorage.getWholesalerDetails(_SerialNumber);
+return(name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
 
         }
 
-
+        
+   
         function getPharmacyDetails(address _SerialNumber)public view returns(string memory _PharmacyName,
         string memory _PharmacyAddress,
         uint32 _ImportingTemparature,
         string memory _DrugStatus,
         uint32 _ImportingDateTime) {
 
-         Pharmacy memory tmpData = BatchPharmacyDetails[_SerialNumber];
-         return(tmpData.PharmacyName,tmpData.PharmacyAddress,tmpData.ImportingTemparature,tmpData.DrugStatus,tmpData.ImportingDateTime);
-           
+       (_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime)=supplyChainStorage.getPharmacyDetails(_SerialNumber);
+return(_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime);
+
         }
-
-
-
-
-
-
-        /* authorize caller */
-    function authorizeCaller(address _caller) public onlyAuthCaller returns(bool) 
-    {
-        authorizedCaller[_caller] = 1;
-        emit AuthorizedCaller(_caller);
-        return true;
-    }
-        
-    /* deauthorize caller */
-    function deAuthorizeCaller(address _caller) public onlyAuthCaller returns(bool) 
-    {
-        authorizedCaller[_caller] = 0;
-        emit DeAuthorizedCaller(_caller);
-        return true;
-    }
-
- 
-   modifier onlyAuthCaller(){
-
-        require(authorizedCaller[tx.origin] == 1);
-        _;
-    }
-    modifier onlyOwner(){
-        require(tx.origin == owner);
-        _;
-    }
-   
-
- /* Get Next Action  */    
-    function getnextOwner(address _SerialNumber) public onlyAuthCaller view returns(string memory)
-    {
-        return nextOwner[_SerialNumber];
-    }
-
-function isBad(address _SerialNumber,uint32 _ExportingTemparature,address currentowner) internal returns(bool){
-    require(!BatchDrugDetails[_SerialNumber].isBad);
-  DrugDetails = BatchDrugDetails[_SerialNumber];
-  DrugDetails.CurrentTemperature = _ExportingTemparature;
-     
-
-    if(_ExportingTemparature > DrugDetails.IdealTemperature){
-        DrugDetails.isBad = true;
-        DrugDetails.status = "Exceeded ideal temperature";
-           BatchDrugDetails[_SerialNumber]=DrugDetails;
-
-        return false;
-    }
-    else if(DrugDetails.expTimeStamp <=block.timestamp){
-         DrugDetails.isBad = true;
-        DrugDetails.status = "Drug Expired";
-           BatchDrugDetails[_SerialNumber]=DrugDetails;
-        return false;
-    }
-    DrugDetails.CurrentproductOwner = currentowner;
-    BatchDrugDetails[_SerialNumber]=DrugDetails;
-        return true;
-
-    }
 
 }
