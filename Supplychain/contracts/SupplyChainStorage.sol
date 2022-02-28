@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.2;
+pragma experimental ABIEncoderV2;
 
 contract SupplyChainStorage{
 
@@ -10,6 +11,7 @@ address public owner;
     }
 
 
+    address[] public DrugList ;//newly added
     /* Events */
     event AuthorizedCaller(address caller);
     event DeAuthorizedCaller(address caller);
@@ -28,7 +30,7 @@ address public owner;
      }
 
 
-    struct Drug{
+    struct  Drug {
         uint32 drugID;
         uint32 batchID;
         string drugName;
@@ -63,9 +65,9 @@ address public owner;
         string DrugStatus;
     }
 
-    struct WhareHouse{
+    struct Wholesaler{
         string name;
-        string WhareHouseAddress;
+        string WholesalerAddress;
         uint32 ImportingTemparature;
         uint32 ExportingTemparature;
         uint32 ImportingDateTime;
@@ -86,7 +88,7 @@ address public owner;
     mapping(address =>User) BatchUserDetails;
     mapping(address => Manufacturer)BatchManufactureringDetails;
     mapping(address =>Distributer)BatchDistributerDetails;
-    mapping(address =>WhareHouse)BatchWhareHouseDetails;
+    mapping(address =>Wholesaler)BatchWholesalerDetails;
     mapping(address =>Pharmacy)BatchPharmacyDetails;
 
 
@@ -94,16 +96,28 @@ address public owner;
         User UserDetail;
         Manufacturer ManufacturerDetails;
         Distributer DistributerDetails;
-        WhareHouse WhareHouseDetails;
+        Wholesaler WholesalerDetails;
         Pharmacy PharmacyDetails;
 
 
 
+    // function getAllDrugDetails() public view returns(Drug[] memory){
+    //    Drug[] memory drugs;
+    //     for(uint i=0;i<DrugList.length;i++){
+    //     drugs[i] = BatchDrugDetails[DrugList[i]];
+    //     }
+    //     return drugs;
+    // }
 
     function getUserRole(address _userAddress) public onlyAuthCaller view returns( string memory)
     {
         return userRole[_userAddress];
     }
+
+    function getDrugKeyList() public view returns(address[] memory){
+        return DrugList;
+    }
+
 
      function setUser(address  _userAddress,
                      string memory _name, 
@@ -119,15 +133,8 @@ address public owner;
         /*store data into mapping*/
         BatchUserDetails[_userAddress] = UserDetail;
         userRole[_userAddress] = _role;
-        
         return true;
     }  
-
-
-
-
-
-
 
     function setDrugDetails(uint32 _drugID,
         uint32 _batchID,
@@ -142,7 +149,7 @@ address public owner;
 
          uint tmpData = uint(keccak256(abi.encodePacked(msg.sender, block.timestamp )));
         address SerialNumber = address(tmpData);
-        
+         DrugList.push(SerialNumber);//newly added
         DrugDetails.drugID = _drugID;
         DrugDetails.batchID = _batchID;
         DrugDetails.drugName = _drugName;
@@ -205,7 +212,7 @@ address public owner;
             DistributerDetails.ExporterAddress = _ExporterAddress;
             DistributerDetails.DrugStatus = "Good";
             BatchDistributerDetails[_SerialNumber] = DistributerDetails;
-             nextOwner[_SerialNumber] = 'WhareHouse'; 
+             nextOwner[_SerialNumber] = 'Wholesaler'; 
             return true; 
            }
            else{
@@ -215,9 +222,9 @@ address public owner;
 
 
 
- function moveFromWhareHouse(address _SerialNumber,
+ function moveFromWholesaler(address _SerialNumber,
         string memory _name,   
-        string memory _WhareHouseAddress,
+        string memory _WholesalerAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
@@ -225,15 +232,15 @@ address public owner;
         ) public onlyAuthCaller returns(bool){
                bool good =  isBad(_SerialNumber,_ExportingTemparature,_ExporterAddress);
            if(good){
-            WhareHouseDetails.name = _name;
-            WhareHouseDetails.WhareHouseAddress =  _WhareHouseAddress;
-            WhareHouseDetails.ImportingTemparature = _ImportingTemparature;
-            WhareHouseDetails.ExportingTemparature = _ExportingTemparature;
-            WhareHouseDetails.ImportingDateTime = _ImportingDateTime;
-            WhareHouseDetails.ExportingDateTime = block.timestamp;
-            WhareHouseDetails.ExporterAddress = _ExporterAddress;
-            WhareHouseDetails.DrugStatus = "Good";
-            BatchWhareHouseDetails[_SerialNumber] = WhareHouseDetails;
+            WholesalerDetails.name = _name;
+            WholesalerDetails.WholesalerAddress =  _WholesalerAddress;
+            WholesalerDetails.ImportingTemparature = _ImportingTemparature;
+            WholesalerDetails.ExportingTemparature = _ExportingTemparature;
+            WholesalerDetails.ImportingDateTime = _ImportingDateTime;
+            WholesalerDetails.ExportingDateTime = block.timestamp;
+            WholesalerDetails.ExporterAddress = _ExporterAddress;
+            WholesalerDetails.DrugStatus = "Good";
+            BatchWholesalerDetails[_SerialNumber] = WholesalerDetails;
              nextOwner[_SerialNumber] = 'Pharmacy';
             return true; 
            }
@@ -241,8 +248,6 @@ address public owner;
                return false;
            }
         }
-
-
 
 function importToPharmacy(address _SerialNumber,
         string memory _PharmacyName,
@@ -347,17 +352,17 @@ function importToPharmacy(address _SerialNumber,
     }
 
 
-    function getWhareHouseDetails(address _SerialNumber
+    function getWholesalerDetails(address _SerialNumber
         )public view returns(string memory name,   
-        string memory _whareHouseAddress,
+        string memory _WholesalerAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
         uint32 _ImportingDateTime,
         uint _ExportingDateTime,
       address _ExporterAddress,
         string memory _DrugStatus) {
-            WhareHouse memory tmpData = BatchWhareHouseDetails[_SerialNumber];
-                    return (tmpData.name,tmpData.WhareHouseAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
+            Wholesaler memory tmpData = BatchWholesalerDetails[_SerialNumber];
+                    return (tmpData.name,tmpData.WholesalerAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
 
         }
 
@@ -438,8 +443,3 @@ function isBad(address _SerialNumber,uint32 _ExportingTemparature,address curren
     }
 
 }
-
-
-
-
-
