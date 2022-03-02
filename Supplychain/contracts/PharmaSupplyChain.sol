@@ -1,28 +1,31 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.2;
+pragma experimental ABIEncoderV2;
 
-import "./SupplyChainStorage.sol";
+import "./test2.sol";
+
 contract PharmaSupplyChain {
 event addDrug(address indexed user, address indexed SerialNumber);
 event MovedFromManufacturer(address indexed user, address indexed SerialNumber);
 event MovedFromDistributor(address indexed user, address indexed SerialNumber);
-event MovedFromWhareHouse(address indexed user, address indexed SerialNumber);
+event MovedFromWholesaler(address indexed user, address indexed SerialNumber);
 event MovedToPharmacy(address indexed user, address indexed SerialNumber);
 
 
-
   modifier isValidPerformer(address _SerialNumber, string memory role) {
-    
         require(keccak256(abi.encodePacked(supplyChainStorage.getUserRole(msg.sender))) == keccak256(abi.encodePacked(role)));
         require(keccak256(abi.encodePacked(supplyChainStorage.getnextOwner(_SerialNumber))) == keccak256(abi.encodePacked(role)));
         _;
     }
+
      /* Storage Variables */    
      SupplyChainStorage supplyChainStorage;
-
+address[] public DrugList;
  constructor(address _supplyChainAddress) public {
         supplyChainStorage = SupplyChainStorage(_supplyChainAddress);
+      DrugList = supplyChainStorage.getDrugKeyList();
     }
+
 
     function getnextOwner(address _SerialNumber) public view returns(string memory Owner)
     {
@@ -30,6 +33,9 @@ event MovedToPharmacy(address indexed user, address indexed SerialNumber);
        return (Owner);
     }
 
+      function getUserRole(address _userAddress)public view returns(string memory){
+         return supplyChainStorage.getUserRole(_userAddress);
+      }
 
     function addUser(address  _userAddress,
                      string memory _name, 
@@ -41,6 +47,7 @@ event MovedToPharmacy(address indexed user, address indexed SerialNumber);
                        
                         return result;
     }
+
 
    function addDrugDetails(uint32 _drugID,
         uint32 _batchID,
@@ -71,33 +78,35 @@ event MovedToPharmacy(address indexed user, address indexed SerialNumber);
                              }
 
 
+        function receivedToDistributor(address _SerialNumber, string memory _name,string memory _DistributorAddress,uint32 _ImportingTemparature)public  returns(bool){
+               return supplyChainStorage.distributorReceving(_SerialNumber,_name,_DistributorAddress,_ImportingTemparature);
+        }
+
+
 function MoveFromDistributor(address _SerialNumber,
-        string memory _name,   
-        string memory _DistributorAddress,
-        uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
-        uint32 _ImportingDateTime,
        address _ExporterAddress
         ) public isValidPerformer(_SerialNumber,'Distributor') returns(bool){
 
-             bool result =  supplyChainStorage.MoveFromDistributor(_SerialNumber,_name,_DistributorAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExporterAddress);
+             bool result =  supplyChainStorage.MoveFromDistributor(_SerialNumber, _ExportingTemparature,_ExporterAddress);
                                 emit MovedFromDistributor(msg.sender,_SerialNumber);
                                 return result;   
             }
 
 
 
-function MoveFromWhareHouse(address _SerialNumber,
-        string memory _name,   
-        string memory _WhareHouseAddress,
-        uint32 _ImportingTemparature,
-        uint32 _ExportingTemparature,
-        uint32 _ImportingDateTime,
-        address _ExporterAddress
-        ) public isValidPerformer(_SerialNumber,'WhareHouse') returns(bool){
+        function receivedToWholeSaler(address _SerialNumber, string memory _name,string memory _WholesalerAddress,uint32 _ImportingTemparature)public  returns(bool){
+               return supplyChainStorage.WholeSalerReceving(_SerialNumber,_name,_WholesalerAddress,_ImportingTemparature);
+        }
 
-             bool result =  supplyChainStorage.moveFromWhareHouse(_SerialNumber,_name,_WhareHouseAddress,_ImportingTemparature, _ExportingTemparature,_ImportingDateTime,_ExporterAddress);
-                                emit MovedFromWhareHouse(msg.sender,_SerialNumber);
+
+function MoveFromWholesaler(address _SerialNumber,
+        uint32 _ExportingTemparature,
+        address _ExporterAddress
+        ) public isValidPerformer(_SerialNumber,'Wholesaler') returns(bool){
+
+             bool result =  supplyChainStorage.moveFromWholesaler(_SerialNumber, _ExportingTemparature,_ExporterAddress);
+                                emit MovedFromWholesaler(msg.sender,_SerialNumber);
                                 return result;   
             }
 
@@ -106,9 +115,8 @@ function MoveFromWhareHouse(address _SerialNumber,
 function importToPharmacy(address _SerialNumber,
         string memory _PharmacyName,
         string memory _PharmacyAddress,
-        uint32 _ImportingTemparature,
-        uint32 _ImportingDateTime) public isValidPerformer(_SerialNumber,'Pharmacy') returns(bool){
-            bool result = supplyChainStorage.importToPharmacy(_SerialNumber,_PharmacyName,_PharmacyAddress,_ImportingTemparature,_ImportingDateTime);
+        uint32 _ImportingTemparature) public isValidPerformer(_SerialNumber,'Pharmacy') returns(bool){
+            bool result = supplyChainStorage.importToPharmacy(_SerialNumber,_PharmacyName,_PharmacyAddress,_ImportingTemparature);
             emit MovedToPharmacy(msg.sender,_SerialNumber);
             return result;
         }
@@ -116,21 +124,29 @@ function importToPharmacy(address _SerialNumber,
 
 
 
- function getDrugDetails(address _SerialNumber) public  view returns(uint32 _drugID,
+ function getDrugDetails1(address _SerialNumber) public  view returns(uint32 _drugID,
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
-        address _CurrentproductOwner,
-        uint32 _cost,
+        uint32 _cost
+        ){
+      
+      return supplyChainStorage.getDrugDetails1(_SerialNumber);
+
+      }
+
+ function getDrugDetails2(address _SerialNumber) public  view returns(address _CurrentproductOwner,
         uint _mfgTimeStamp,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature,
-        string memory _status){
+        address _nextOwner,
+        string memory _status
+        ){
       
-      return supplyChainStorage.getDrugDetails(_SerialNumber);
-      
-        }
+      return supplyChainStorage.getDrugDetails2(_SerialNumber);
+
+      }
 
 
 
@@ -150,29 +166,29 @@ function importToPharmacy(address _SerialNumber,
         string memory _DistributorAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
-        uint32 _ImportingDateTime,
+        uint256 _ImportingDateTime,
         uint256 _ExportingDateTime,
         address _ExporterAddress,
         string memory _DrugStatus
     )
     { 
-                    (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus) = supplyChainStorage.getWhareHouseDetails(_SerialNumber);
+                    (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus) = supplyChainStorage.getDistributorDetails(_SerialNumber);
 
 
           return (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
 
     }
- function getWhareHouseDetails(address _SerialNumber
+ function getWholesalerDetails(address _SerialNumber
         )public view returns(string memory name,   
-        string memory _whareHouseAddress,
+        string memory _WholesalerAddress,
         uint32 _ImportingTemparature,
         uint32 _ExportingTemparature,
-        uint32 _ImportingDateTime,
+        uint256 _ImportingDateTime,
         uint256 _ExportingDateTime,
        address _ExporterAddress,
         string memory _DrugStatus) {
-           (name,_whareHouseAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus)=supplyChainStorage.getWhareHouseDetails(_SerialNumber);
-return(name,_whareHouseAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
+           (name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus)=supplyChainStorage.getWholesalerDetails(_SerialNumber);
+return(name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
 
         }
 
@@ -182,34 +198,11 @@ return(name,_whareHouseAddress,_ImportingTemparature,_ExportingTemparature,_Impo
         string memory _PharmacyAddress,
         uint32 _ImportingTemparature,
         string memory _DrugStatus,
-        uint32 _ImportingDateTime) {
+        uint256 _ImportingDateTime) {
 
        (_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime)=supplyChainStorage.getPharmacyDetails(_SerialNumber);
 return(_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime);
 
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-  
-   
-
-
-
-
-
-
 
 }
