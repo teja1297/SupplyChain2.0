@@ -8,22 +8,24 @@ address public owner;
         owner = msg.sender;
          authorizedCaller[msg.sender] = 1;
     }
-    address[] public DrugList ;//newly added
+    address[] public DrugKeyList ;
+    address[] public UserKeyList;
     /* Events */
     event AuthorizedCaller(address caller);
     event DeAuthorizedCaller(address caller);
 
-
     mapping(address => string) userRole;
-
     mapping(address => uint8) authorizedCaller;
       mapping (address => string) nextOwner;
 
     
     struct User{
-        string name;
+        string ParticipantName;
         string contactNo;
         bool isActive;
+        string UserName;
+        string userPassword;
+        string Email;
      }
 
 
@@ -108,32 +110,45 @@ address public owner;
     //     return drugs;
     // }
 
+
+
     function getUserRole(address _userAddress) public onlyAuthCaller view returns( string memory)
     {
         return userRole[_userAddress];
     }
 
     function getDrugKeyList() public view returns(address[] memory){
-        return DrugList;
+        return DrugKeyList;
     }
-
+    function getUserKeyList() public view returns(address[] memory){
+        return UserKeyList;
+    }
+   
 
      function setUser(address  _userAddress,
-                     string memory _name, 
+                     string memory _ParticipantName, 
                      string  memory _contactNo, 
                      string memory _role, 
+                     string memory _UserName,
+                     string memory _UserPassword,
+                     string memory _Email,
                      bool _isActive) public onlyOwner returns(bool){
         
         /*store data into struct*/
-        UserDetail.name = _name;
+        UserDetail.ParticipantName = _ParticipantName;
         UserDetail.contactNo = _contactNo;
         UserDetail.isActive = _isActive;
+        UserDetail.UserName = _UserName;
+        UserDetail.Email = _Email;
+        UserDetail.userPassword = _UserPassword;
         authorizedCaller[_userAddress] = 1;
         /*store data into mapping*/
         BatchUserDetails[_userAddress] = UserDetail;
         userRole[_userAddress] = _role;
+        UserKeyList.push(_userAddress);
         return true;
     }  
+    
 
     function setDrugDetails(uint32 _drugID,
         uint32 _batchID,
@@ -148,7 +163,7 @@ address public owner;
 
          uint tmpData = uint(keccak256(abi.encodePacked(msg.sender, block.timestamp )));
         address SerialNumber = address(tmpData);
-         DrugList.push(SerialNumber);//newly added
+         DrugKeyList.push(SerialNumber);//newly added
         DrugDetails.drugID = _drugID;
         DrugDetails.batchID = _batchID;
         DrugDetails.drugName = _drugName;
@@ -321,16 +336,18 @@ function importToPharmacy(address _SerialNumber,
     
 }
     /*get user details*/
-    function getUser(address _userAddress) public onlyAuthCaller view returns(string memory name, 
+    function getUser(address _userAddress) public onlyAuthCaller view returns(string memory ParticipantName,
+                                                                    string memory UserName, 
+                                                                    string memory Email, 
                                                                     string memory contactNo, 
-                                                                    string memory role,
-                                                                    bool isActive
+                                                                    string memory role
+                                            
                                                                 ){
 
         /*Getting value from struct*/
         User memory tmpData = BatchUserDetails[_userAddress];
         
-        return (tmpData.name, tmpData.contactNo, userRole[_userAddress], tmpData.isActive);
+        return (tmpData.ParticipantName, tmpData.UserName, tmpData.Email,tmpData.contactNo, userRole[_userAddress]);
     }
 
 
