@@ -2,7 +2,7 @@
 pragma solidity ^0.6.2;
 pragma experimental ABIEncoderV2;
 
-import "./test2.sol";
+import "./test3.sol";
 
 contract PharmaSupplyChain {
 event addDrug(address indexed user, address indexed SerialNumber);
@@ -18,32 +18,48 @@ event MovedToPharmacy(address indexed user, address indexed SerialNumber);
         _;
     }
 
+string public x   = "PharmaSupplyChain Contarct";
+
+
      /* Storage Variables */    
      SupplyChainStorage supplyChainStorage;
-address[] public DrugList;
+
  constructor(address _supplyChainAddress) public {
         supplyChainStorage = SupplyChainStorage(_supplyChainAddress);
-      DrugList = supplyChainStorage.getDrugKeyList();
     }
 
+   //gets the list of userKeys
+   function getUserList() public view returns(address[] memory UserList)
+   {
+      return supplyChainStorage.getUserKeyList();
+   }
+   //gets the list of DrugKeys
+   function getDrugList() public view returns(address[] memory DrugKeyList){
+      return supplyChainStorage.getDrugKeyList();
+   }
 
+   
     function getnextOwner(address _SerialNumber) public view returns(string memory Owner)
     {
        (Owner) = supplyChainStorage.getnextOwner(_SerialNumber);
        return (Owner);
     }
 
+
       function getUserRole(address _userAddress)public view returns(string memory){
          return supplyChainStorage.getUserRole(_userAddress);
       }
 
     function addUser(address  _userAddress,
-                     string memory _name, 
-                     string  memory _contactNo, 
-                     string memory _role, 
+                     string memory _ParticipantName, 
+                      string  memory _contactNo, 
+                        string memory _role, 
+                         string memory _Username,
+                         string memory _password,
+                        string memory _Email,
                      bool _isActive) public returns(bool){
 
-                       bool result = supplyChainStorage.setUser(_userAddress,_name,_contactNo,_role,_isActive);
+                       bool result = supplyChainStorage.setUser(_userAddress,_ParticipantName,_contactNo,_role,_Username,_password,_Email,_isActive);
                        
                         return result;
     }
@@ -122,7 +138,15 @@ function importToPharmacy(address _SerialNumber,
         }
 
 
+function getUser(address _userAddress)public view returns(string memory _ParticipantName, 
+                     string memory _Username,
+                     string memory _Email,
+                      string  memory _contactNo, 
+                        string memory _role
+                        ){
 
+                        return  supplyChainStorage.getUser(_userAddress);
+}
 
  function getDrugDetails1(address _SerialNumber) public  view returns(uint32 _drugID,
         uint32 _batchID,
@@ -173,11 +197,10 @@ function importToPharmacy(address _SerialNumber,
     )
     { 
                     (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus) = supplyChainStorage.getDistributorDetails(_SerialNumber);
-
-
           return (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
+          }
 
-    }
+
  function getWholesalerDetails(address _SerialNumber
         )public view returns(string memory name,   
         string memory _WholesalerAddress,
@@ -189,9 +212,7 @@ function importToPharmacy(address _SerialNumber,
         string memory _DrugStatus) {
            (name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus)=supplyChainStorage.getWholesalerDetails(_SerialNumber);
 return(name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
-
-        }
-
+}
         
    
         function getPharmacyDetails(address _SerialNumber)public view returns(string memory _PharmacyName,
@@ -205,4 +226,11 @@ return(_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_Importi
 
         }
 
+        function test() public view returns(string memory){
+           return x;
+        }
+
 }
+
+//0x04045D359669ad165f3F80602D4e7371410dc996
+//0x6A285471E473AD824C05e46D7316B2a185Cee22F
