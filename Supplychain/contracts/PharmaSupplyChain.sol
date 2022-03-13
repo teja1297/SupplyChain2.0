@@ -213,6 +213,8 @@ function getUser(address _userAddress)public view returns(string memory _Partici
            (name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus)=supplyChainStorage.getWholesalerDetails(_SerialNumber);
 return(name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
 }
+
+
         
    
         function getPharmacyDetails(address _SerialNumber)public view returns(string memory _PharmacyName,
@@ -226,11 +228,48 @@ return(_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_Importi
 
         }
 
+
+        function ManufacturerTreeDetails(address _SerialNumber)public view returns(string memory name,
+        string memory ManufacturerAddress,
+        address ExporterAddress,
+        uint32 ExportingTemparature,
+        uint256 ExportingDateTime,
+        string memory DrugStatus){
+     return supplyChainStorage.BatchManufactureringDetails(_SerialNumber);
+        }
+
+        function DistributorTreeDetails(address _SerialNumber) public view returns( string memory name,
+        string memory DistributorAddress,
+        uint32 ImportingTemparature,
+        uint32 ExportingTemparature,
+        uint256 ImportingDateTime,
+        uint256 ExportingDateTime,
+        address ExporterAddress,
+        string memory DrugStatus){
+           return supplyChainStorage.BatchdistributorDetails(_SerialNumber);
+        }
+
+        function WholesalerTreeDetails(address _SerialNumber) public view returns(string memory name,
+        string memory WholesalerAddress,
+        uint32 ImportingTemparature,
+        uint32 ExportingTemparature,
+        uint256 ImportingDateTime,
+        uint256 ExportingDateTime,
+       address ExporterAddress,
+        string memory DrugStatus){
+           return supplyChainStorage.BatchWholesalerDetails(_SerialNumber);
+        }
+
+         function PharmacyTreeDetails(address _SerialNumber) public view returns( string memory PharmacyName,
+        string memory PharmacyAddress,
+        uint32 ImportingTemparature,
+        string memory DrugStatus,
+        uint256 ImportingDateTime){
+           return supplyChainStorage.BatchPharmacyDetails(_SerialNumber);
+        }
+
         function test() public view returns(string memory){
            return x;
         }
 
 }
-
-//0x04045D359669ad165f3F80602D4e7371410dc996
-//0x6A285471E473AD824C05e46D7316B2a185Cee22F
