@@ -85,12 +85,12 @@ address public owner;
         string DrugStatus;
         uint256 ImportingDateTime;
     }
-    mapping(address => Drug) BatchDrugDetails;
-    mapping(address =>User) BatchUserDetails;
-    mapping(address => Manufacturer)BatchManufactureringDetails;
-    mapping(address =>distributor)BatchdistributorDetails;
-    mapping(address =>Wholesaler)BatchWholesalerDetails;
-    mapping(address =>Pharmacy)BatchPharmacyDetails;
+    mapping(address => Drug) public BatchDrugDetails;
+    mapping(address =>User) public BatchUserDetails;
+    mapping(address => Manufacturer) public BatchManufactureringDetails;
+    mapping(address =>distributor) public BatchdistributorDetails;
+    mapping(address =>Wholesaler) public BatchWholesalerDetails;
+    mapping(address =>Pharmacy) public BatchPharmacyDetails;
 
 
         Drug DrugDetails;
@@ -532,8 +532,3 @@ function isBad(address _SerialNumber,uint32 Temparature) internal returns(bool){
     }
 
 }
-
-
-
-
-//1646246054
