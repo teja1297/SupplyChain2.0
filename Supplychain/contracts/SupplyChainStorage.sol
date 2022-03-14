@@ -36,7 +36,6 @@ address public owner;
         string Currentlocation;
         address CurrentproductOwner;
         address nextOwner;
-        uint32 cost;
         uint mfgTimeStamp;
         uint expTimeStamp;
         uint32  CurrentTemperature;
@@ -154,7 +153,6 @@ address public owner;
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
-        uint32 _cost,
         uint _mfgTimeStamp,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
@@ -169,7 +167,6 @@ address public owner;
         DrugDetails.drugName = _drugName;
         DrugDetails.Currentlocation = _Currentlocation;
         DrugDetails.CurrentproductOwner = tx.origin;
-        DrugDetails.cost = _cost;
         DrugDetails.mfgTimeStamp = _mfgTimeStamp;
         DrugDetails.expTimeStamp = _expTimeStamp;
         DrugDetails.CurrentTemperature = _CurrentTemperature;
@@ -335,27 +332,15 @@ function importToPharmacy(address _SerialNumber,
             }
     
 }
-    /*get user details*/
-    function getUser(address _userAddress) public onlyAuthCaller view returns(string memory ParticipantName,
-                                                                    string memory UserName, 
-                                                                    string memory Email, 
-                                                                    string memory contactNo, 
-                                                                    string memory role
-                                            
-                                                                ){
-
-        /*Getting value from struct*/
-        User memory tmpData = BatchUserDetails[_userAddress];
-        
-        return (tmpData.ParticipantName, tmpData.UserName, tmpData.Email,tmpData.contactNo, userRole[_userAddress]);
-    }
-
+  
 
     function getDrugDetails1(address _SerialNumber) public onlyAuthCaller view returns(uint32 _drugID,
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
-        uint32 _cost
+         string memory _status,
+        bool _isBad
+       
         ){
 
         Drug memory tmpData = BatchDrugDetails[_SerialNumber];
@@ -364,7 +349,9 @@ function importToPharmacy(address _SerialNumber,
         tmpData.batchID,
         tmpData.drugName,
         tmpData.Currentlocation,
-        tmpData.cost
+        tmpData.status,
+        tmpData.isBad
+        
        );
         }
 
@@ -376,8 +363,7 @@ function importToPharmacy(address _SerialNumber,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature,
-        address _nextOwner,
-        string memory _status
+        address _nextOwner
         ){
 
         Drug memory tmpData = BatchDrugDetails[_SerialNumber];
@@ -389,77 +375,15 @@ function importToPharmacy(address _SerialNumber,
         tmpData.expTimeStamp,
         tmpData.CurrentTemperature,
         tmpData.IdealTemperature,
-        tmpData.nextOwner,
-        tmpData.status);
+        tmpData.nextOwner);
         }
 
-
-  
-
-      /*get ManufacturerDetails*/
-    function getManufacturerDetails(address _SerialNumber) public onlyAuthCaller view returns(string memory _name,
-                             string memory _ManufacturerAddress,
-                             address _ExporterAddress,
-                             uint32 _ExportingTemparature,
-                             uint _ExportingDateTime, 
-                             string memory _DrugStatus) {
-        
-        Manufacturer memory tmpData = BatchManufactureringDetails[_SerialNumber];
-
-        return (tmpData.name,tmpData.ManufacturerAddress,tmpData.ExporterAddress,tmpData.ExportingTemparature,tmpData.ExportingDateTime,tmpData.DrugStatus);
-    }
-
-
-
-
-
- /*get DistributorDetails*/
-
-  function getDistributorDetails(address _SerialNumber) public onlyAuthCaller view returns(string memory name,   
-        string memory _DistributorAddress,
-        uint32 _ImportingTemparature,
-        uint32 _ExportingTemparature,
-        uint256 _ImportingDateTime,
-        uint _ExportingDateTime,
-        address _ExporterAddress,
-        string memory _DrugStatus
-    )
-    { 
-        distributor memory tmpData = BatchdistributorDetails[_SerialNumber];
-
-        return (tmpData.name,tmpData.DistributorAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
-    }
-
-
-    function getWholesalerDetails(address _SerialNumber
-        )public view returns(string memory name,   
-        string memory _WholesalerAddress,
-        uint32 _ImportingTemparature,
-        uint32 _ExportingTemparature,
-        uint256 _ImportingDateTime,
-        uint256 _ExportingDateTime,
-      address _ExporterAddress,
-        string memory _DrugStatus) {
-            Wholesaler memory tmpData = BatchWholesalerDetails[_SerialNumber];
-                    return (tmpData.name,tmpData.WholesalerAddress, tmpData.ImportingTemparature, tmpData.ExportingTemparature,tmpData.ImportingDateTime,tmpData.ExportingDateTime,tmpData.ExporterAddress,tmpData.DrugStatus);
-
-        }
-
-
-        function getPharmacyDetails(address _SerialNumber)public view returns(string memory _PharmacyName,
-        string memory _PharmacyAddress,
-        uint32 _ImportingTemparature,
-        string memory _DrugStatus,
-        uint256 _ImportingDateTime) {
-
-         Pharmacy memory tmpData = BatchPharmacyDetails[_SerialNumber];
-         return(tmpData.PharmacyName,tmpData.PharmacyAddress,tmpData.ImportingTemparature,tmpData.DrugStatus,tmpData.ImportingDateTime);
-           
-        }
-
-
-
-
+   function Authenticate(string memory _username,string memory _password,address _userAddress) public view returns(bool){
+       User memory user = BatchUserDetails[_userAddress];
+      require(keccak256(abi.encodePacked(user.UserName))== keccak256(abi.encodePacked(_username)),"Username is Inavalid");
+       require(keccak256(abi.encodePacked(user.userPassword))== keccak256(abi.encodePacked(_password)),"Password is Incorrect");
+       return true;
+   }
 
 
         /* authorize caller */
@@ -532,3 +456,8 @@ function isBad(address _SerialNumber,uint32 Temparature) internal returns(bool){
     }
 
 }
+
+
+
+
+//1646246054
