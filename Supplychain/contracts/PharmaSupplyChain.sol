@@ -5,18 +5,21 @@ pragma experimental ABIEncoderV2;
 import "./test3.sol";
 
 contract PharmaSupplyChain {
+
 event addDrug(address indexed user, address indexed SerialNumber);
 event MovedFromManufacturer(address indexed user, address indexed SerialNumber);
 event MovedFromDistributor(address indexed user, address indexed SerialNumber);
 event MovedFromWholesaler(address indexed user, address indexed SerialNumber);
 event MovedToPharmacy(address indexed user, address indexed SerialNumber);
 
-
-  modifier isValidPerformer(address _SerialNumber, string memory role) {
+modifier isValidPerformer(address _SerialNumber, string memory role) {
         require(keccak256(abi.encodePacked(supplyChainStorage.getUserRole(msg.sender))) == keccak256(abi.encodePacked(role)));
         require(keccak256(abi.encodePacked(supplyChainStorage.getnextOwner(_SerialNumber))) == keccak256(abi.encodePacked(role)));
         _;
-    }
+
+   }
+
+
 
 string public x   = "PharmaSupplyChain Contarct";
 
@@ -27,6 +30,8 @@ string public x   = "PharmaSupplyChain Contarct";
  constructor(address _supplyChainAddress) public {
         supplyChainStorage = SupplyChainStorage(_supplyChainAddress);
     }
+
+    
 
    //gets the list of userKeys
    function getUserList() public view returns(address[] memory UserList)
@@ -69,13 +74,13 @@ string public x   = "PharmaSupplyChain Contarct";
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
-        uint32 _cost,
+       
         uint _mfgTimeStamp,
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature
      ) public  returns(address){
-         address SerialNumber = supplyChainStorage.setDrugDetails(_drugID,_batchID,_drugName,_Currentlocation,_cost,_mfgTimeStamp,_expTimeStamp,_CurrentTemperature,_IdealTemperature);
+         address SerialNumber = supplyChainStorage.setDrugDetails(_drugID,_batchID,_drugName,_Currentlocation,_mfgTimeStamp,_expTimeStamp,_CurrentTemperature,_IdealTemperature);
           emit addDrug(msg.sender, SerialNumber); 
           return SerialNumber;
      }
@@ -137,22 +142,70 @@ function importToPharmacy(address _SerialNumber,
             return result;
         }
 
+        function Authenticate(string memory _username, string memory _password,address _userAddress)public view returns(bool){
+         return supplyChainStorage.Authenticate(_username,_password,_userAddress);
+        }
 
-function getUser(address _userAddress)public view returns(string memory _ParticipantName, 
-                     string memory _Username,
-                     string memory _Email,
-                      string  memory _contactNo, 
-                        string memory _role
-                        ){
 
-                        return  supplyChainStorage.getUser(_userAddress);
-}
 
- function getDrugDetails1(address _SerialNumber) public  view returns(uint32 _drugID,
+
+        function UserDetails(address _userAddress)public view returns(string memory ParticipantName,
+        string memory contactNo,
+        bool isActive,
+        string memory UserName,
+        string memory password,
+        string memory Email){
+           return supplyChainStorage.BatchUserDetails(_userAddress);
+        }
+      
+
+
+        function ManufacturerDetails(address _SerialNumber)public view returns(string memory name,
+        string memory ManufacturerAddress,
+        address ExporterAddress,
+        uint32 ExportingTemparature,
+        uint256 ExportingDateTime,
+        string memory DrugStatus){
+     return supplyChainStorage.BatchManufactureringDetails(_SerialNumber);
+        }
+
+        function DistributorDetails(address _SerialNumber) public view returns( string memory name,
+        string memory DistributorAddress,
+        uint32 ImportingTemparature,
+        uint32 ExportingTemparature,
+        uint256 ImportingDateTime,
+        uint256 ExportingDateTime,
+        address ExporterAddress,
+        string memory DrugStatus){
+           return supplyChainStorage.BatchdistributorDetails(_SerialNumber);
+        }
+
+        function WholesalerDetails(address _SerialNumber) public view returns(string memory name,
+        string memory WholesalerAddress,
+        uint32 ImportingTemparature,
+        uint32 ExportingTemparature,
+        uint256 ImportingDateTime,
+        uint256 ExportingDateTime,
+       address ExporterAddress,
+        string memory DrugStatus){
+           return supplyChainStorage.BatchWholesalerDetails(_SerialNumber);
+        }
+
+         function PharmacyDetails(address _SerialNumber) public view returns( string memory PharmacyName,
+        string memory PharmacyAddress,
+        uint32 ImportingTemparature,
+        string memory DrugStatus,
+        uint256 ImportingDateTime){
+           return supplyChainStorage.BatchPharmacyDetails(_SerialNumber);
+        }
+         
+
+         function getDrugDetails1(address _SerialNumber) public  view returns(uint32 _drugID,
         uint32 _batchID,
         string memory _drugName,
         string memory _Currentlocation,
-        uint32 _cost
+        string memory _status,
+        bool _isBad
         ){
       
       return supplyChainStorage.getDrugDetails1(_SerialNumber);
@@ -164,8 +217,7 @@ function getUser(address _userAddress)public view returns(string memory _Partici
         uint _expTimeStamp,
         uint32  _CurrentTemperature,
         uint32 _IdealTemperature,
-        address _nextOwner,
-        string memory _status
+        address _nextOwner
         ){
       
       return supplyChainStorage.getDrugDetails2(_SerialNumber);
@@ -174,102 +226,9 @@ function getUser(address _userAddress)public view returns(string memory _Partici
 
 
 
-         function getManufacturerDetails(address _SerialNumber) public  view returns(string memory _name,
-                             string memory _ManufacturerAddress,
-                            address _ExporterAddress,
-                             uint32 _ExportingTemparature,
-                             uint256 _ExportingDateTime, 
-                             string memory _DrugStatus) {
-     (_name,_ManufacturerAddress,_ExporterAddress,_ExportingTemparature,_ExportingDateTime,_DrugStatus)=supplyChainStorage.getManufacturerDetails(_SerialNumber);
-
-        return (_name,_ManufacturerAddress,_ExporterAddress,_ExportingTemparature,_ExportingDateTime,_DrugStatus);
- 
-        
-         }
- function getDistributorDetails(address _SerialNumber) public  view returns(string memory name,   
-        string memory _DistributorAddress,
-        uint32 _ImportingTemparature,
-        uint32 _ExportingTemparature,
-        uint256 _ImportingDateTime,
-        uint256 _ExportingDateTime,
-        address _ExporterAddress,
-        string memory _DrugStatus
-    )
-    { 
-                    (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus) = supplyChainStorage.getDistributorDetails(_SerialNumber);
-          return (name,_DistributorAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
-          }
-
-
- function getWholesalerDetails(address _SerialNumber
-        )public view returns(string memory name,   
-        string memory _WholesalerAddress,
-        uint32 _ImportingTemparature,
-        uint32 _ExportingTemparature,
-        uint256 _ImportingDateTime,
-        uint256 _ExportingDateTime,
-       address _ExporterAddress,
-        string memory _DrugStatus) {
-           (name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus)=supplyChainStorage.getWholesalerDetails(_SerialNumber);
-return(name,_WholesalerAddress,_ImportingTemparature,_ExportingTemparature,_ImportingDateTime,_ExportingDateTime,_ExporterAddress,_DrugStatus);
-}
-
-
-        
-   
-        function getPharmacyDetails(address _SerialNumber)public view returns(string memory _PharmacyName,
-        string memory _PharmacyAddress,
-        uint32 _ImportingTemparature,
-        string memory _DrugStatus,
-        uint256 _ImportingDateTime) {
-
-       (_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime)=supplyChainStorage.getPharmacyDetails(_SerialNumber);
-return(_PharmacyName,_PharmacyAddress,_ImportingTemparature,_DrugStatus,_ImportingDateTime);
-
-        }
-
-
-        function ManufacturerTreeDetails(address _SerialNumber)public view returns(string memory name,
-        string memory ManufacturerAddress,
-        address ExporterAddress,
-        uint32 ExportingTemparature,
-        uint256 ExportingDateTime,
-        string memory DrugStatus){
-     return supplyChainStorage.BatchManufactureringDetails(_SerialNumber);
-        }
-
-        function DistributorTreeDetails(address _SerialNumber) public view returns( string memory name,
-        string memory DistributorAddress,
-        uint32 ImportingTemparature,
-        uint32 ExportingTemparature,
-        uint256 ImportingDateTime,
-        uint256 ExportingDateTime,
-        address ExporterAddress,
-        string memory DrugStatus){
-           return supplyChainStorage.BatchdistributorDetails(_SerialNumber);
-        }
-
-        function WholesalerTreeDetails(address _SerialNumber) public view returns(string memory name,
-        string memory WholesalerAddress,
-        uint32 ImportingTemparature,
-        uint32 ExportingTemparature,
-        uint256 ImportingDateTime,
-        uint256 ExportingDateTime,
-       address ExporterAddress,
-        string memory DrugStatus){
-           return supplyChainStorage.BatchWholesalerDetails(_SerialNumber);
-        }
-
-         function PharmacyTreeDetails(address _SerialNumber) public view returns( string memory PharmacyName,
-        string memory PharmacyAddress,
-        uint32 ImportingTemparature,
-        string memory DrugStatus,
-        uint256 ImportingDateTime){
-           return supplyChainStorage.BatchPharmacyDetails(_SerialNumber);
-        }
-
         function test() public view returns(string memory){
            return x;
         }
 
 }
+
